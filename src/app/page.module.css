@@ -1,0 +1,174 @@
+.main {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+    min-height: 100vh;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xl);
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background-color: var(--secondary);
+}
+
+.setupCard {
+    background: var(--bg-card);
+    padding: var(--space-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--space-xl);
+    border: 2px dashed var(--primary);
+    text-align: center;
+}
+
+.setupTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: var(--space-sm);
+    color: var(--text-main);
+}
+
+.formGroup {
+    margin-top: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    text-align: left;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.input {
+    padding: var(--space-md);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    outline: none;
+    transition: var(--transition);
+}
+
+.input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
+}
+
+.saveButton {
+    margin-top: var(--space-md);
+    background-color: var(--primary);
+    color: white;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    width: 100%;
+}
+
+.saveButton:hover {
+    background-color: var(--primary-dark);
+}
+
+.dashboard {
+    animation: fadeIn 0.5s ease-out;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.weatherWidget {
+    background-color: var(--bg-card);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+}
+
+.weatherInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.temp {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.recommendationLabel {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: var(--space-md);
+    margin-bottom: var(--space-sm);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.activityList {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+}
+
+@media (min-width: 480px) {
+    .activityList {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.babyStatus::after {
+    content: "🍼";
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    font-size: 5rem;
+    opacity: 0.2;
+}
+
+.babyName {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: var(--space-xs);
+}
+
+.babyAge {
+    font-size: 1.125rem;
+    opacity: 0.9;
+}
+
+.logoutButton {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
