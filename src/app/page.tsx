@@ -88,17 +88,26 @@ export default function Home() {
       const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)] ?? '아기랑 체험';
       setCurrentKeyword(randomKeyword);
 
+      const searchPlaces = async (query: string): Promise<NaverLocalPlace[]> => {
+        const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
+        const data: NaverLocalSearchResponse = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.details || data.error || '장소 검색 요청에 실패했습니다.');
+        }
+
+        return data.items ?? [];
+      };
+
       const region = targetRegion || info.region || '';
-      const searchQuery = region ? `${region} ${randomKeyword}` : randomKeyword;
+      const primaryQuery = region ? `${region} ${randomKeyword}` : randomKeyword;
+      let items = await searchPlaces(primaryQuery);
 
-      const response = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}`);
-      const data: NaverLocalSearchResponse = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.details || data.error || '장소 검색 요청에 실패했습니다.');
+      if (items.length === 0 && region) {
+        items = await searchPlaces(randomKeyword);
       }
 
-      setRealPlaces(data.items ?? []);
+      setRealPlaces(items);
     } catch (error) {
       setRealPlaces([]);
       setSearchError(error instanceof Error ? error.message : '장소 검색 중 오류가 발생했습니다.');
