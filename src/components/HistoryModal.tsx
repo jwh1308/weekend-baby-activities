@@ -14,16 +14,40 @@ interface Props {
 export const HistoryModal = ({ activityName, onClose, onSave }: Props) => {
   const [memo, setMemo] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const optimizeImage = async (file: File): Promise<string> => {
+    const imageBitmap = await createImageBitmap(file);
+
+    const maxSize = 1280;
+    const ratio = Math.min(maxSize / imageBitmap.width, maxSize / imageBitmap.height, 1);
+    const targetWidth = Math.round(imageBitmap.width * ratio);
+    const targetHeight = Math.round(imageBitmap.height * ratio);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('이미지 처리에 실패했습니다.');
+    }
+
+    context.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
+    return canvas.toDataURL('image/jpeg', 0.82);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        setPhotoError(null);
+        const optimized = await optimizeImage(file);
+        setPhoto(optimized);
+      } catch {
+        setPhotoError('사진을 처리하지 못했습니다. 다른 이미지를 선택해 주세요.');
+      }
     }
   };
 
@@ -61,6 +85,9 @@ export const HistoryModal = ({ activityName, onClose, onSave }: Props) => {
             accept="image/*"
             className={styles.fileInput}
           />
+          {photoError && (
+            <p style={{ marginTop: '8px', fontSize: '0.8rem', color: '#dc2626' }}>{photoError}</p>
+          )}
         </div>
 
         <div className={styles.buttonGroup}>

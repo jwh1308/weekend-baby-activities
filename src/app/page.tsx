@@ -8,18 +8,14 @@ import { calculateMonths, getAgeLabel } from '@/lib/utils';
 import { useLocation } from '@/hooks/useLocation';
 import { fetchWeather, WeatherData } from '@/lib/weather';
 import { getSearchKeywords } from '@/lib/naver';
+import { clearVisitHistory, loadBabyInfo, loadVisitHistory, saveBabyInfo, saveVisitHistory } from '@/lib/clientStorage';
 import { RealPlaceCard } from '@/components/RealPlaceCard';
 import { HistoryModal } from '@/components/HistoryModal';
+import { BabyInfo } from '@/types/baby';
 import { VisitRecord } from '@/types/history';
 import { NaverLocalPlace, NaverLocalSearchResponse } from '@/types/place';
 import { MapPin, Loader2, Thermometer, Calendar, Search, RefreshCcw } from 'lucide-react';
 import styles from './page.module.css';
-
-interface BabyInfo {
-  name: string;
-  birthday: string;
-  region?: string;
-}
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
@@ -48,26 +44,18 @@ export default function Home() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    try {
-      const savedInfo = localStorage.getItem('babyInfo');
-      const savedHistory = localStorage.getItem('visitHistory');
+    const savedInfo = loadBabyInfo();
+    const savedHistory = loadVisitHistory();
 
-      if (savedInfo) {
-        const parsed: BabyInfo = JSON.parse(savedInfo);
-        setBabyInfo(parsed);
-        setInputRegion(parsed.region || '');
-      }
-
-      if (savedHistory) {
-        setHistory(JSON.parse(savedHistory));
-      }
-    } catch (error) {
-      console.error('Failed to parse local data:', error);
-      localStorage.removeItem('babyInfo');
-      localStorage.removeItem('visitHistory');
-    } finally {
-      setInitialLoading(false);
+    if (savedInfo) {
+      setBabyInfo(savedInfo);
+      setInputName(savedInfo.name);
+      setInputBirthday(savedInfo.birthday);
+      setInputRegion(savedInfo.region || '');
     }
+
+    setHistory(savedHistory);
+    setInitialLoading(false);
   }, []);
 
   const loadRealPlaces = useCallback(async (targetRegion?: string, infoOverride?: BabyInfo | null) => {
@@ -131,9 +119,20 @@ export default function Home() {
     }
 
     const info: BabyInfo = { name: inputName, birthday: inputBirthday, region: inputRegion };
-    localStorage.setItem('babyInfo', JSON.stringify(info));
+    saveBabyInfo(info);
     setBabyInfo(info);
     void loadRealPlaces(inputRegion, info);
+  };
+
+  const handleEditInfo = () => {
+    if (!babyInfo) {
+      return;
+    }
+
+    setInputName(babyInfo.name);
+    setInputBirthday(babyInfo.birthday);
+    setInputRegion(babyInfo.region || '');
+    setBabyInfo(null);
   };
 
   const handleSaveVisit = (memo: string, photo: string | null) => {
@@ -151,13 +150,17 @@ export default function Home() {
     };
 
     setHistory((prevHistory) => {
-      const updatedHistory = [newRecord, ...prevHistory];
-      localStorage.setItem('visitHistory', JSON.stringify(updatedHistory));
+      const updatedHistory = saveVisitHistory([newRecord, ...prevHistory]);
       return updatedHistory;
     });
 
     setSelectedPlaceName(null);
     setActiveTab('history');
+  };
+
+  const handleClearHistory = () => {
+    clearVisitHistory();
+    setHistory([]);
   };
 
   if (loading || initialLoading) {
@@ -213,7 +216,7 @@ export default function Home() {
         </section>
       ) : (
         <section className={styles.dashboard}>
-          <div className={styles.babyStatus} onClick={() => setBabyInfo(null)} style={{ cursor: 'pointer' }}>
+          <div className={styles.babyStatus} onClick={handleEditInfo} style={{ cursor: 'pointer' }}>
             <h1 className={styles.babyName}>{babyInfo.name}</h1>
             <p className={styles.babyAge}>오늘 기준으로 <strong>{getAgeLabel(calculateMonths(babyInfo.birthday))}</strong> 되었어요!</p>
           </div>
@@ -279,6 +282,14 @@ export default function Home() {
             </>
           ) : (
             <div className={styles.historyList}>
+              {history.length > 0 && (
+                <button
+                  onClick={handleClearHistory}
+                  style={{ alignSelf: 'flex-end', color: 'var(--text-muted)', textDecoration: 'underline', fontSize: '0.85rem' }}
+                >
+                  기록 전체 삭제
+                </button>
+              )}
               {history.length > 0 ? history.map((item) => (
                 <div key={item.id} className={styles.historyItem}>
                   <div className={styles.historyTop}>
