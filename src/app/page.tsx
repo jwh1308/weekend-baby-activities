@@ -85,10 +85,10 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!loading && user && babyInfo) {
+    if (!loading && user && babyInfo && !location.loading) {
       loadRealPlaces();
     }
-  }, [babyInfo?.birthday]); // 개월수 기준이 바뀌거나 할 때
+  }, [babyInfo?.birthday, loading, user, location.lat, location.lng, location.loading]); // 개월수 기준이 바뀌거나 할 때
 
   const handleSaveInfo = (e: React.FormEvent) => {
     e.preventDefault();
