@@ -3,40 +3,49 @@
 import { useState, useEffect } from 'react';
 
 interface LocationState {
-    lat: number | null;
-    lng: number | null;
-    error: string | null;
-    loading: boolean;
+  lat: number | null;
+  lng: number | null;
+  error: string | null;
+  loading: boolean;
 }
 
+const isGeolocationSupported = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return 'geolocation' in navigator;
+};
+
 export const useLocation = () => {
-    const [location, setLocation] = useState<LocationState>({
-        lat: null,
-        lng: null,
-        error: null,
-        loading: true,
-    });
+  const geolocationSupported = isGeolocationSupported();
 
-    useEffect(() => {
-        if (!navigator.geolocation) {
-            setLocation(prev => ({ ...prev, error: 'Geolocation이 지원되지 않는 브라우저입니다.', loading: false }));
-            return;
-        }
+  const [location, setLocation] = useState<LocationState>({
+    lat: null,
+    lng: null,
+    error: geolocationSupported ? null : 'Geolocation이 지원되지 않는 브라우저입니다.',
+    loading: geolocationSupported,
+  });
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setLocation({
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                    error: null,
-                    loading: false,
-                });
-            },
-            (error) => {
-                setLocation(prev => ({ ...prev, error: '위치 정보를 가져올 수 없습니다.', loading: false }));
-            }
-        );
-    }, []);
+  useEffect(() => {
+    if (!geolocationSupported) {
+      return;
+    }
 
-    return location;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          error: null,
+          loading: false,
+        });
+      },
+      () => {
+        setLocation((prev) => ({ ...prev, error: '위치 정보를 가져올 수 없습니다.', loading: false }));
+      }
+    );
+  }, [geolocationSupported]);
+
+  return location;
 };
