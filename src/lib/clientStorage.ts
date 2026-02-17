@@ -9,6 +9,31 @@ const canUseStorage = (): boolean => {
   return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 };
 
+const safeSetItem = (key: string, value: string): boolean => {
+  if (!canUseStorage()) {
+    return false;
+  }
+
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const safeRemoveItem = (key: string): void => {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // noop
+  }
+};
+
 const safeParse = <T>(value: string | null, fallback: T): T => {
   if (!value) {
     return fallback;
@@ -21,11 +46,39 @@ const safeParse = <T>(value: string | null, fallback: T): T => {
   }
 };
 
-const sanitizeHistory = (records: VisitRecord[]): VisitRecord[] => {
-  return records.slice(0, MAX_HISTORY_ITEMS).map((record) => ({
-    ...record,
-    memo: record.memo.slice(0, 1000),
-  }));
+const isRecordObject = (value: unknown): value is Record<string, unknown> => {
+  return !!value && typeof value === 'object';
+};
+
+const normalizeVisitRecord = (value: unknown): VisitRecord | null => {
+  if (!isRecordObject(value)) {
+    return null;
+  }
+
+  const id = typeof value.id === 'string' ? value.id : '';
+  const activityId = typeof value.activityId === 'string' ? value.activityId : '';
+  const activityName = typeof value.activityName === 'string' ? value.activityName : '';
+  const date = typeof value.date === 'string' ? value.date : '';
+
+  if (!id || !activityId || !activityName || !date) {
+    return null;
+  }
+
+  return {
+    id,
+    activityId,
+    activityName,
+    date,
+    memo: typeof value.memo === 'string' ? value.memo.slice(0, 1000) : '',
+    photo: typeof value.photo === 'string' ? value.photo : undefined,
+  };
+};
+
+const sanitizeHistory = (records: unknown[]): VisitRecord[] => {
+  return records
+    .map((record) => normalizeVisitRecord(record))
+    .filter((record): record is VisitRecord => record !== null)
+    .slice(0, MAX_HISTORY_ITEMS);
 };
 
 const stripPhotoFromHistory = (records: VisitRecord[]): VisitRecord[] => {
@@ -47,19 +100,11 @@ export const loadBabyInfo = (): BabyInfo | null => {
 };
 
 export const saveBabyInfo = (info: BabyInfo): void => {
-  if (!canUseStorage()) {
-    return;
-  }
-
-  localStorage.setItem(BABY_INFO_KEY, JSON.stringify(info));
+  safeSetItem(BABY_INFO_KEY, JSON.stringify(info));
 };
 
 export const clearBabyInfo = (): void => {
-  if (!canUseStorage()) {
-    return;
-  }
-
-  localStorage.removeItem(BABY_INFO_KEY);
+  safeRemoveItem(BABY_INFO_KEY);
 };
 
 export const loadVisitHistory = (): VisitRecord[] => {
@@ -67,31 +112,28 @@ export const loadVisitHistory = (): VisitRecord[] => {
     return [];
   }
 
-  const parsed = safeParse<VisitRecord[]>(localStorage.getItem(VISIT_HISTORY_KEY), []);
+  const parsed = safeParse<unknown>(localStorage.getItem(VISIT_HISTORY_KEY), []);
   return Array.isArray(parsed) ? sanitizeHistory(parsed) : [];
 };
 
 export const saveVisitHistory = (records: VisitRecord[]): VisitRecord[] => {
+  const normalized = sanitizeHistory(records);
   if (!canUseStorage()) {
-    return sanitizeHistory(records);
+    return normalized;
   }
 
-  const normalized = sanitizeHistory(records);
-
-  try {
-    localStorage.setItem(VISIT_HISTORY_KEY, JSON.stringify(normalized));
+  if (safeSetItem(VISIT_HISTORY_KEY, JSON.stringify(normalized))) {
     return normalized;
-  } catch {
-    const stripped = stripPhotoFromHistory(normalized);
-    localStorage.setItem(VISIT_HISTORY_KEY, JSON.stringify(stripped));
+  }
+
+  const stripped = stripPhotoFromHistory(normalized);
+  if (safeSetItem(VISIT_HISTORY_KEY, JSON.stringify(stripped))) {
     return stripped;
   }
+
+  return stripped;
 };
 
 export const clearVisitHistory = (): void => {
-  if (!canUseStorage()) {
-    return;
-  }
-
-  localStorage.removeItem(VISIT_HISTORY_KEY);
+  safeRemoveItem(VISIT_HISTORY_KEY);
 };

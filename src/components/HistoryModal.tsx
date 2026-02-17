@@ -17,7 +17,23 @@ export const HistoryModal = ({ activityName, onClose, onSave }: Props) => {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const optimizeImage = async (file: File): Promise<string> => {
+  const readAsDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+          return;
+        }
+
+        reject(new Error('이미지 읽기에 실패했습니다.'));
+      };
+      reader.onerror = () => reject(new Error('이미지 읽기에 실패했습니다.'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const optimizeWithBitmap = async (file: File): Promise<string> => {
     const imageBitmap = await createImageBitmap(file);
 
     const maxSize = 1280;
@@ -35,7 +51,20 @@ export const HistoryModal = ({ activityName, onClose, onSave }: Props) => {
     }
 
     context.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
+    imageBitmap.close();
     return canvas.toDataURL('image/jpeg', 0.82);
+  };
+
+  const optimizeImage = async (file: File): Promise<string> => {
+    if (typeof createImageBitmap !== 'function') {
+      return readAsDataUrl(file);
+    }
+
+    try {
+      return await optimizeWithBitmap(file);
+    } catch {
+      return readAsDataUrl(file);
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +72,10 @@ export const HistoryModal = ({ activityName, onClose, onSave }: Props) => {
     if (file) {
       try {
         setPhotoError(null);
+        if (!file.type.startsWith('image/')) {
+          throw new Error('이미지 파일만 업로드할 수 있습니다.');
+        }
+
         const optimized = await optimizeImage(file);
         setPhoto(optimized);
       } catch {
