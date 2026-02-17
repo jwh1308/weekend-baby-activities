@@ -89,4 +89,7 @@ src/
 
 ## 참고 사항
 - 방문 기록은 현재 `localStorage`에 저장됩니다.
+- 저장소 전환(Phase 3) 설계는 `docs/phase3-storage-migration-design.md`에 정리되어 있습니다.
+  - 목표: Firestore(메타데이터) + Firebase Storage(이미지) 분리 저장
+  - 전환 방식: `local -> hybrid -> remote` 단계적 전환
 - 계획 문서는 `.plans/`에 저장되며 Git 추적에서 제외됩니다.
