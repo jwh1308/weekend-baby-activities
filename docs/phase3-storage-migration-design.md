@@ -88,9 +88,9 @@
 - 파일 크기 제한(예: 3MB), MIME 타입 `image/*` 제한
 
 ## 10. 구현 체크리스트
-- [ ] Firestore/Storage 클라이언트 래퍼 추가
-- [ ] migration status 모델 정의
-- [ ] 마이그레이션 실행기 구현
+- [x] Firestore/Storage 클라이언트 래퍼 추가
+- [x] migration status 모델 정의
+- [x] 마이그레이션 실행기 구현
 - [ ] feature flag 기반 데이터 소스 분기
 - [ ] 삭제 API(단건/전체) 원격 저장소 대응
 - [ ] 모니터링 이벤트(성공/실패/재시도) 추가
