@@ -55,6 +55,9 @@ npm run dev
 - `NAVER_CLIENT_ID`
 - `NAVER_CLIENT_SECRET`
 
+### Storage Mode (Phase 3)
+- `NEXT_PUBLIC_STORAGE_MODE` (`local` | `hybrid` | `remote`, 기본값: `local`)
+
 API 키가 비어 있거나 placeholder 값이면 일부 기능은 목업/기본값으로 동작합니다.
 
 ## 스크립트
@@ -92,4 +95,5 @@ src/
 - 저장소 전환(Phase 3) 설계는 `docs/phase3-storage-migration-design.md`에 정리되어 있습니다.
   - 목표: Firestore(메타데이터) + Firebase Storage(이미지) 분리 저장
   - 전환 방식: `local -> hybrid -> remote` 단계적 전환
+- Phase 3 상세 구현 티켓은 `docs/phase3-implementation-tickets.md`를 참고하세요.
 - 계획 문서는 `.plans/`에 저장되며 Git 추적에서 제외됩니다.
