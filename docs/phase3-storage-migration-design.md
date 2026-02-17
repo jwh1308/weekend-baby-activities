@@ -94,3 +94,6 @@
 - [ ] feature flag 기반 데이터 소스 분기
 - [ ] 삭제 API(단건/전체) 원격 저장소 대응
 - [ ] 모니터링 이벤트(성공/실패/재시도) 추가
+
+## 11. 상세 구현 티켓
+- 실행 단위로 분해한 티켓 문서: `docs/phase3-implementation-tickets.md`
